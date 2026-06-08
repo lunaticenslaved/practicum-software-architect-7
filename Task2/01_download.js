@@ -4,11 +4,13 @@ const fs = require("fs");
 const path = require("path");
 
 // ============================================================
-// Список персонажей — замените/дополните нужными именами.
+// Список страниц для скачивания — замените/дополните нужными.
 // Имя должно совпадать с частью URL на вики (пробелы = _).
-// Пример: "Kakashi_Hatake", "Naruto_Uzumaki", "Sasuke_Uchiha"
+// Пример: "Kakashi_Hatake", "Naruto_Uzumaki", "Konohagakure"
 // ============================================================
-const CHARACTER_NAMES = [
+
+// --- 20 персонажей ---
+const CHARACTERS = [
   "Kakashi_Hatake",
   "Naruto_Uzumaki",
   "Sasuke_Uchiha",
@@ -22,54 +24,80 @@ const CHARACTER_NAMES = [
   "Minato_Namikaze",
   "Obito_Uchiha",
   "Madara_Uchiha",
-  "Hashirama_Senju",
-  "Tobirama_Senju",
   "Shikamaru_Nara",
   "Rock_Lee",
   "Neji_Hyūga",
   "Might_Guy",
   "Killer_B",
-  "Pain_(character)",
-  "Konan",
-  "Deidara",
-  "Sasori",
-  "Hidan",
   "Kabuto_Yakushi",
-  "Kushina_Uzumaki",
-  "Boruto_Uzumaki",
-  "Ino_Yamanaka",
-  "Temari",
   "Nagato",
-  "Shisui_Uchiha",
-  "Hiruzen_Sarutobi",
-  "Tenten",
-  "Kaguya_Ōtsutsuki",
 ];
 
-const BASE_URL = "https://naruto.fandom.com/wiki/";
-const OUTPUT_DIR = path.join(__dirname, "raw_pages");
-const DELAY_MS = 1000; // задержка между запросами, чтобы не нагружать сервер
+// --- 15 мест и событий ---
+const PLACES_AND_EVENTS = [
+  "Konohagakure",
+  "Sunagakure",
+  "Kirigakure",
+  "Kumogakure",
+  "Iwagakure",
+  "Amegakure",
+  "Akatsuki",
+  "Fourth_Shinobi_World_War",
+  "Uchiha_Clan_Downfall",
+  "Valley_of_the_End",
+  "Mount_Myōboku",
+  "Ryūchi_Cave",
+  "Land_of_Fire",
+];
+
+const PAGE_NAMES = [...CHARACTERS, ...PLACES_AND_EVENTS];
+
+// ============================================================
+// Используем MediaWiki API вместо прямого доступа к страницам.
+// Fandom защищён Cloudflare, который блокирует прямые HTTP-запросы
+// (403 Forbidden). API-эндпоинт /api.php не проходит через
+// Cloudflare и свободно отдаёт данные в формате JSON.
+// ============================================================
+const API_URL = "https://naruto.fandom.com/api.php";
+const OUTPUT_DIR = path.join(__dirname, "raw");
+const DELAY_MS = 1500; // задержка между запросами, чтобы не нагружать сервер
 
 /**
- * Скачивает HTML-страницу по URL и возвращает текстовое содержимое статьи.
+ * Скачивает страницу через MediaWiki API (action=parse) и возвращает чистый текст.
+ * API не блокирует запросы, в отличие от прямого доступа к HTML-страницам.
  */
 async function fetchCharacterText(name) {
-  const url = `${BASE_URL}${encodeURIComponent(name)}`;
-  console.log(`⏳  Загрузка: ${url}`);
+  const pageName = name.replace(/_/g, " ");
+  const params = new URLSearchParams({
+    action: "parse",
+    page: pageName,
+    prop: "text",
+    format: "json",
+    disablelimitreport: "true",
+    disableeditsection: "true",
+  });
+
+  const url = `${API_URL}?${params}`;
+  console.log(`⏳  Загрузка: ${pageName}`);
 
   const response = await fetch(url, {
     headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "User-Agent": "NarutoCharacterDownloader/1.0 (educational project)",
+      Accept: "application/json",
     },
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status} для ${url}`);
+    throw new Error(`HTTP ${response.status} для ${pageName}`);
   }
 
-  const html = await response.text();
+  const data = await response.json();
+
+  if (data.error) {
+    throw new Error(`API ошибка: ${data.error.info}`);
+  }
+
+  const html = data.parse.text["*"];
   const $ = cheerio.load(html);
 
   // Удаляем ненужные блоки: навигацию, инфобоксы, таблицы, скрипты, стили
@@ -77,18 +105,12 @@ async function fetchCharacterText(name) {
     "script, style, noscript, .navbox, .infobox, .portable-infobox, " +
       ".toc, .mw-editsection, .reference, .references, .reflist, " +
       "#References, .navbox-container, .messagebox, .noprint, " +
-      "table.wikitable, .quote, .mw-empty-elt, sup.reference"
+      "table.wikitable, .quote, .mw-empty-elt, sup.reference, " +
+      ".thumb, figure, figcaption, .gallery, .wikia-gallery"
   ).remove();
 
-  // Основной контент статьи
-  const content = $(".mw-parser-output");
-
-  if (!content.length) {
-    throw new Error(`Контент не найден на странице ${name}`);
-  }
-
   // Извлекаем чистый текст
-  let text = content.text();
+  let text = $.root().text();
 
   // Нормализуем пробелы и пустые строки
   text = text
@@ -116,12 +138,12 @@ async function main() {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
   }
 
-  console.log(`\n🔰  Начинаем загрузку ${CHARACTER_NAMES.length} персонажей...\n`);
+  console.log(`\n🔰  Начинаем загрузку ${PAGE_NAMES.length} страниц...\n`);
 
   let success = 0;
   let failed = 0;
 
-  for (const name of CHARACTER_NAMES) {
+  for (const name of PAGE_NAMES) {
     try {
       const text = await fetchCharacterText(name);
 
