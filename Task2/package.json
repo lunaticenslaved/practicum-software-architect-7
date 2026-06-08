@@ -4,7 +4,8 @@
   "description": "",
   "main": "01_download.js",
   "scripts": {
-    "download": "node 01_download.js"
+    "download": "node 01_download.js",
+    "replace": "node 02_replace.js"
   },
   "keywords": [],
   "author": "",
