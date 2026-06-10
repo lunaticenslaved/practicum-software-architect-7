@@ -1,0 +1,15 @@
+{
+  "name": "task3",
+  "version": "1.0.0",
+  "description": "Для проекта QuantumForge Software выбрана модель **`intfloat/multilingual-e5-large`** на базе архитектуры XLM-RoBERTa, оптимизированная для задач семантического поиска и retrieval.",
+  "main": "index.js",
+  "scripts": {
+    "chunks": "node 01_chunking.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@langchain/textsplitters": "^1.0.1"
+  }
+}
