@@ -1,14 +1,33 @@
-# RAG Telegram-бот
+# RAG Telegram-бот и консольный клиент
 
-Telegram-бот с RAG-пайплайном для ответов на вопросы по базе знаний фэнтези-мира.
+Telegram-бот и консольный клиент с RAG-пайплайном для ответов на вопросы по базе знаний фэнтези-мира.
 
 ## Архитектура
 
 ```
-Пользователь (Telegram)
-        │
-        ▼
-   Telegram Bot API
+                    ┌──────────────────┐
+                    │   rag_engine.py  │  ← общая RAG-логика
+                    │                  │
+                    │  RAGEngine       │  FAISS + Embeddings + Ollama
+                    │  SYSTEM_PROMPT   │  Few-shot + CoT
+                    │  build_rag_prompt│
+                    └────────┬─────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              ▼                             ▼
+     ┌────────────────┐            ┌────────────────┐
+     │    bot.py       │            │    cli.py       │
+     │  Telegram-бот   │            │  Консольный     │
+     │  (python-       │            │  клиент (REPL   │
+     │   telegram-bot) │            │  или одиночный  │
+     └────────────────┘            │  запрос)        │
+                                   └────────────────┘
+```
+
+### RAG-пайплайн (общий для обоих клиентов)
+
+```
+Запрос пользователя
         │
         ▼
   ┌─────────────────┐
@@ -33,6 +52,14 @@ Telegram-бот с RAG-пайплайном для ответов на вопр�
            ▼
      Ответ + источники
 ```
+
+## Структура файлов
+
+| Файл | Описание |
+|------|----------|
+| `rag_engine.py` | RAG-движок: FAISS-поиск, эмбеддинги, промпт, Ollama LLM |
+| `bot.py` | Telegram-бот, импортирует `rag_engine` |
+| `cli.py` | Консольный клиент, импортирует `rag_engine` |
 
 ## Техники промптинга
 
@@ -66,12 +93,14 @@ A: Let me reason step-by-step based on the context fragments above.
 
 | Переменная | Описание | По умолчанию |
 |-----------|----------|-------------|
-| `TELEGRAM_BOT_TOKEN` | Токен Telegram-бота (обязательно) | — |
+| `TELEGRAM_BOT_TOKEN` | Токен Telegram-бота (только для bot.py) | — |
 | `OLLAMA_HOST` | Адрес Ollama API | `http://localhost:11434` |
 | `OLLAMA_MODEL` | Модель для генерации | `llama3` |
 | `TOP_K` | Количество чанков контекста | `5` |
 
 ## Запуск
+
+### Предварительные шаги
 
 ```bash
 # 1. Убедитесь, что Ollama запущена с моделью Llama 3
@@ -80,8 +109,27 @@ ollama serve
 
 # 2. Установите зависимости
 make install
+```
 
-# 3. Запустите бота
+### Консольный клиент (рекомендуется для проверки)
+
+```bash
+# Интерактивный режим (REPL)
+make cli
+
+# Одиночный запрос
+make cli QUERY="Who is Toren Solwind?"
+make cli QUERY="Где расположена Вердания?"
+make cli QUERY="Tell me about the Great Convergence War"
+```
+
+В интерактивном режиме:
+- Введите вопрос и нажмите Enter
+- Для выхода: `quit`, `exit`, `q` или `Ctrl+C`
+
+### Telegram-бот
+
+```bash
 export TELEGRAM_BOT_TOKEN="your-token-here"
 make bot
 ```

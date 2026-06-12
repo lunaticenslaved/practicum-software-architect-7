@@ -21,3 +21,6 @@ search:
 
 bot:
 	$(PYTHON) Task4/bot.py
+
+cli:
+	$(PYTHON) Task4/cli.py $(QUERY)
