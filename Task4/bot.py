@@ -83,20 +83,26 @@ logger = logging.getLogger(__name__)
 #    began on the 8th of October and lasted until the 10th, with the complete
 #    victory of the Allied Sentinel Forces.»
 
-SYSTEM_PROMPT = """You are a knowledgeable assistant for the fantasy world lore database. \
-You answer questions based ONLY on the provided context fragments. \
-If the context does not contain enough information to answer, say so honestly.
+SYSTEM_PROMPT = """Ты — помощник по базе знаний фэнтези-мира. \
+Ты отвечаешь на вопросы ТОЛЬКО на основе предоставленных фрагментов контекста. \
+Если в контексте недостаточно информации для ответа, честно скажи об этом.
 
-IMPORTANT RULES:
-- Use ONLY the information from the context below.
-- Do NOT invent facts that are not in the context.
-- If the answer spans multiple context fragments, synthesize them.
-- Respond in the same language as the user's question.
+ВАЖНЫЕ ПРАВИЛА:
+- Используй ТОЛЬКО информацию из контекста ниже.
+- НЕ придумывай факты, которых нет в контексте.
+- Если ответ охватывает несколько фрагментов контекста, синтезируй их.
+- Отвечай на том же языке, на котором задан вопрос.
 
-TECHNIQUE: Think step-by-step (Chain-of-Thought) before giving the final answer.
+ТЕХНИКА (Chain-of-Thought): Ты помощник, который сначала размышляет, а потом отвечает. \
+Всегда пиши свои шаги рассуждения в виде нумерованного списка, прежде чем дать финальный ответ. \
+Формат ответа:
+1. [Шаг рассуждения — что ты нашёл в контексте]
+2. [Следующий шаг — какие факты связаны]
+3. [Вывод — что следует из найденного]
+Итого: [Финальный ответ]
 
-Below are examples of how to answer questions. These examples use real facts \
-from the knowledge base (Few-shot):
+Ниже приведены примеры ответов на вопросы. Эти примеры используют реальные факты \
+из базы знаний (Few-shot):
 
 ---
 Example 1:
@@ -117,8 +123,8 @@ Final answer: Toren Solwind is a sentinel of Verdania's Solwind clan who became 
 
 ---
 
-Now answer the user's question using the same approach: \
-first reason step-by-step based on the context fragments, then give the final answer."""
+Теперь ответь на вопрос пользователя, используя тот же подход: \
+сначала пронумерованные шаги рассуждения на основе фрагментов контекста, затем финальный ответ."""
 
 
 def build_rag_prompt(query: str, context_chunks: list[dict]) -> str:
