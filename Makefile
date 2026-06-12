@@ -12,3 +12,9 @@ prepare:
 chunks:
 	$(PYTHON) Task3/01_chunking.py
 	$(PYTHON) Task3/02_embeddings.py
+
+index:
+	$(PYTHON) Task3/03_index.py
+
+search:
+	$(PYTHON) Task3/04_search.py "$(QUERY)"
