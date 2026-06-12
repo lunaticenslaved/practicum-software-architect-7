@@ -18,3 +18,6 @@ index:
 
 search:
 	$(PYTHON) Task3/04_search.py "$(QUERY)"
+
+bot:
+	$(PYTHON) Task4/bot.py
