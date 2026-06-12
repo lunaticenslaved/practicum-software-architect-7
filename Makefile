@@ -24,3 +24,12 @@ bot:
 
 cli:
 	$(PYTHON) Task4/cli.py $(QUERY)
+
+test-inject:
+	$(PYTHON) Task5/test_rag.py --inject
+
+test-clean:
+	$(PYTHON) Task5/test_rag.py --clean
+
+test-rag:
+	$(PYTHON) Task5/test_rag.py
