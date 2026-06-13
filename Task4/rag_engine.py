@@ -35,8 +35,8 @@ INDEX_FILE = os.path.join(FAISS_INDEX_DIR, "index.faiss")
 METADATA_FILE = os.path.join(FAISS_INDEX_DIR, "metadata.json")
 
 # Лог запросов (JSONL)
-QUERY_LOG_DIR = os.path.join(SCRIPT_DIR, "logs")
-QUERY_LOG_FILE = os.path.join(QUERY_LOG_DIR, "query_log.jsonl")
+QUERY_LOG_DIR = os.path.join(SCRIPT_DIR, "..", "Task7")
+QUERY_LOG_FILE = os.path.join(QUERY_LOG_DIR, "logs.jsonl")
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3")

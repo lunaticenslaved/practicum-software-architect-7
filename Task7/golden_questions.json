@@ -1,0 +1,136 @@
+{
+  "description": "Золотой набор тестовых запросов для оценки покрытия базы знаний",
+  "version": "1.0",
+  "queries": [
+    {
+      "id": "K1",
+      "group": "known",
+      "query": "Who is Toren Solwind and what is he known for?",
+      "entity": "Toren Solwind",
+      "entity_file": "Toren_Solwind.txt",
+      "expected_keywords": ["toren", "solwind", "sentinel", "verdania", "crimson beast", "archon"],
+      "expected_answer": "should_answer",
+      "description": "Главный персонаж — sentinel Verdania, beast-bearer of the Crimson Beast, Seventh Archon"
+    },
+    {
+      "id": "K2",
+      "group": "known",
+      "query": "What is The Obsidian Circle and what are their goals?",
+      "entity": "The Obsidian Circle",
+      "entity_file": "The_Obsidian_Circle.txt",
+      "expected_keywords": ["obsidian circle", "criminal", "primal beasts", "organization"],
+      "expected_answer": "should_answer",
+      "description": "Главная антагонистическая организация — охота за primal beasts"
+    },
+    {
+      "id": "K3",
+      "group": "known",
+      "query": "Где расположена Вердания и кто ей управляет?",
+      "entity": "Verdania",
+      "entity_file": "Verdania.txt",
+      "expected_keywords": ["verdania", "realm of embers", "archon", "hidden village"],
+      "expected_answer": "should_answer",
+      "description": "Главная локация — hidden village of the Realm of Embers, управляется Archon"
+    },
+    {
+      "id": "K4",
+      "group": "known",
+      "query": "What was The Great Convergence War and who fought in it?",
+      "entity": "The Great Convergence War",
+      "entity_file": "The_Great_Convergence_War.txt",
+      "expected_keywords": ["great convergence war", "allied sentinel", "obsidian circle", "war"],
+      "expected_answer": "should_answer",
+      "description": "Ключевое событие — война Allied Sentinel Forces vs The Obsidian Circle"
+    },
+    {
+      "id": "K5",
+      "group": "known",
+      "query": "Who is Kaelen Duskborne and what is his relationship with Toren?",
+      "entity": "Kaelen Duskborne",
+      "entity_file": "Kaelen_Duskborne.txt",
+      "expected_keywords": ["kaelen", "duskborne", "eclipse eye", "toren", "rival"],
+      "expected_answer": "should_answer",
+      "description": "Ключевой персонаж — rival Toren, последний Duskborne, Eclipse Eye"
+    },
+    {
+      "id": "K6",
+      "group": "known",
+      "query": "Who is Zephros and what is his role as Sand Archon?",
+      "entity": "Zephros",
+      "entity_file": "Zephros.txt",
+      "expected_keywords": ["zephros", "sand", "archon", "duneholm", "beast-bearer", "shukaku"],
+      "expected_answer": "should_answer",
+      "description": "Персонаж — Sand Archon, beast-bearer of Shukaku, друг Toren"
+    },
+    {
+      "id": "K7",
+      "group": "known",
+      "query": "What happened to Soren Duskborne and why did he betray his clan?",
+      "entity": "Soren Duskborne",
+      "entity_file": "Soren_Duskborne.txt",
+      "expected_keywords": ["soren", "duskborne", "clan", "verdania", "kaelen", "brother"],
+      "expected_answer": "should_answer",
+      "description": "Персонаж — трагический герой, уничтожил свой клан ради Verdania"
+    },
+    {
+      "id": "K8",
+      "group": "known",
+      "query": "Who is Theron Duskborne and why is he considered legendary?",
+      "entity": "Theron Duskborne",
+      "entity_file": "Theron_Duskborne.txt",
+      "expected_keywords": ["theron", "duskborne", "legendary", "verdania", "void eye"],
+      "expected_answer": "should_answer",
+      "description": "Персонаж — легендарный злодей, основатель Verdania, Void Eye"
+    },
+    {
+      "id": "A1",
+      "group": "absent",
+      "query": "What is the Rift of Echoes and what battles took place there?",
+      "entity": "Rift of Echoes",
+      "entity_file": "Rift_of_Echoes.txt",
+      "expected_keywords": ["rift of echoes", "toren", "kaelen", "hashirama", "theron", "battle"],
+      "expected_answer": "partial_or_refuse",
+      "description": "Удалённая локация — место битв Toren vs Kaelen и Hashirama vs Theron"
+    },
+    {
+      "id": "A2",
+      "group": "absent",
+      "query": "Who is Valdric and what role did he play in training Toren?",
+      "entity": "Valdric",
+      "entity_file": "Valdric.txt",
+      "expected_keywords": ["valdric", "three legends", "toren", "mentor", "training", "toad"],
+      "expected_answer": "partial_or_refuse",
+      "description": "Удалённый персонаж — наставник Toren, один из Трёх Легенд"
+    },
+    {
+      "id": "A3",
+      "group": "absent",
+      "query": "What was the Duskborne Purge and who carried it out?",
+      "entity": "The Duskborne Purge",
+      "entity_file": "The_Duskborne_Purge.txt",
+      "expected_keywords": ["duskborne purge", "massacre", "soren", "theron", "duskborne clan"],
+      "expected_answer": "partial_or_refuse",
+      "description": "Удалённое событие — массовое уничтожение клана Duskborne"
+    },
+    {
+      "id": "A4",
+      "group": "absent",
+      "query": "Where did Toren Solwind and Kaelen Duskborne have their final battle?",
+      "entity": "Rift of Echoes",
+      "entity_file": "Rift_of_Echoes.txt",
+      "expected_keywords": ["rift of echoes", "valley of the end", "final battle"],
+      "expected_answer": "partial_or_refuse",
+      "description": "Косвенный вопрос — ответ требует знания об удалённой локации"
+    },
+    {
+      "id": "A5",
+      "group": "absent",
+      "query": "Who are the Three Legends and what are they known for?",
+      "entity": "Valdric",
+      "entity_file": "Valdric.txt",
+      "expected_keywords": ["three legends", "valdric", "maelis", "vexaris", "legendary"],
+      "expected_answer": "partial_or_refuse",
+      "description": "Вопрос о группе, к которой принадлежит удалённый персонаж"
+    }
+  ]
+}

@@ -28,27 +28,81 @@
 
 ### 2. Golden Set — тестовые запросы
 
-Создан набор из 10 запросов, разделённых на две группы:
+Золотой набор из 13 запросов хранится в `golden_questions.json` и разделён на две группы:
 
-#### Группа G (Gap) — 6 запросов о удалённых сущностях
+#### Группа Known (K) — 8 запросов на известные темы (бот должен ответить)
 
-| ID | Запрос | Целевая сущность |
-|----|--------|------------------|
-| G1 | What is the Rift of Echoes and what battles took place there? | Rift of Echoes |
-| G2 | Where did Toren Solwind and Kaelen Duskborne have their final battle? | Rift of Echoes |
-| G3 | Who is Valdric and what role did he play in training Toren? | Valdric |
-| G4 | Who are the Three Legends and what are they known for? | Valdric |
-| G5 | What was the Duskborne Purge and who carried it out? | The Duskborne Purge |
-| G6 | Why did Soren Duskborne kill his own clan? | The Duskborne Purge |
+| ID | Запрос | Целевая сущность | Аспект |
+|----|--------|------------------|--------|
+| K1 | Who is Toren Solwind and what is he known for? | Toren Solwind | персонаж |
+| K2 | What is The Obsidian Circle and what are their goals? | The Obsidian Circle | организация |
+| K3 | Где расположена Вердания и кто ей управляет? | Verdania | локация (рус.) |
+| K4 | What was The Great Convergence War and who fought in it? | The Great Convergence War | событие |
+| K5 | Who is Kaelen Duskborne and what is his relationship with Toren? | Kaelen Duskborne | персонаж |
+| K6 | Who is Zephros and what is his role as Sand Archon? | Zephros | персонаж |
+| K7 | What happened to Soren Duskborne and why did he betray his clan? | Soren Duskborne | персонаж |
+| K8 | Who is Theron Duskborne and why is he considered legendary? | Theron Duskborne | персонаж |
 
-#### Группа C (Control) — 4 запроса о сохранённых сущностях
+#### Группа Absent (A) — 5 запросов на удалённые/отсутствующие темы (бот не должен ответить полно)
 
-| ID | Запрос | Целевая сущность |
-|----|--------|------------------|
-| C1 | Who is Toren Solwind and what is he known for? | Toren Solwind |
-| C2 | What is The Obsidian Circle and what are their goals? | The Obsidian Circle |
-| C3 | Где расположена Вердания и кто ей управляет? | Verdania |
-| C4 | What was The Great Convergence War and who fought in it? | The Great Convergence War |
+| ID | Запрос | Целевая сущность | Тип вопроса |
+|----|--------|------------------|-------------|
+| A1 | What is the Rift of Echoes and what battles took place there? | Rift of Echoes | прямой |
+| A2 | Who is Valdric and what role did he play in training Toren? | Valdric | прямой |
+| A3 | What was the Duskborne Purge and who carried it out? | The Duskborne Purge | прямой |
+| A4 | Where did Toren and Kaelen have their final battle? | Rift of Echoes | косвенный |
+| A5 | Who are the Three Legends and what are they known for? | Valdric | косвенный |
+
+#### Запуск golden set
+
+    # Все запросы
+    make golden-set
+
+    # Только known-запросы
+    make golden-set-known
+
+    # Только absent-запросы
+    make golden-set-absent
+
+#### Результаты golden set
+
+**Общий результат: 10/13 (76.9%)**
+
+| Группа | PASS | FAIL | Всего | Доля |
+|--------|------|------|-------|------|
+| Known (бот должен ответить) | 7 | 1 | 8 | 87.5% |
+| Absent (бот не должен ответить полно) | 3 | 2 | 5 | 60.0% |
+
+##### Known-запросы — детальные результаты
+
+| ID | Coverage | Refusal | Chunks | Время | Результат | Наблюдение |
+|----|----------|---------|--------|-------|-----------|------------|
+| K1 | 100% | Нет | 5 | 47.8s | ✅ PASS | Полный ответ о Toren Solwind — все 6 ключевых слов найдены |
+| K2 | 25% | Нет | 5 | 35.7s | ❌ FAIL | Бот нашёл Obsidian Circle, но не упомянул «criminal», «primal beasts», «organization» |
+| K3 | 100% | Нет | 5 | 30.0s | ✅ PASS | Полный ответ на русском — Verdania, Realm of Embers, Archon, hidden village |
+| K4 | 100% | Нет | 5 | 19.5s | ✅ PASS | Полный ответ о Great Convergence War — все 4 ключевых слова |
+| K5 | 80% | Нет | 5 | 50.7s | ✅ PASS | Хороший ответ о Kaelen — не упомянул «Eclipse Eye» |
+| K6 | 100% | Нет | 5 | 66.2s | ✅ PASS | Полный ответ о Zephros — все 6 ключевых слов |
+| K7 | 100% | Нет | 5 | 35.6s | ✅ PASS | Полный ответ о Soren Duskborne — все 6 ключевых слов |
+| K8 | 80% | Нет | 5 | 37.8s | ✅ PASS | Хороший ответ о Theron — не упомянул «Void Eye» |
+
+##### Absent-запросы — детальные результаты
+
+| ID | Coverage | Refusal | Chunks | Время | Результат | Наблюдение |
+|----|----------|---------|--------|-------|-----------|------------|
+| A1 | 67% | Нет | 5 | 40.4s | ✅ PASS | Бот нашёл Rift of Echoes из перекрёстных ссылок, но coverage < 80% |
+| A2 | 67% | Нет | 5 | 31.1s | ✅ PASS | Бот нашёл Valdric из упоминаний в других файлах, coverage < 80% |
+| A3 | 100% | Нет | 5 | 37.7s | ❌ FAIL | Бот полностью ответил о Duskborne Purge из перекрёстных ссылок — coverage 100% |
+| A4 | 33% | Нет | 5 | 35.9s | ✅ PASS | Бот не назвал «Rift of Echoes» и «Valley of the End» — coverage < 80% |
+| A5 | 80% | Нет | 5 | 60.0s | ❌ FAIL | Бот подробно ответил о Three Legends — coverage 80%, порог не пройден |
+
+##### Анализ провалов
+
+**K2 (FAIL)** — Obsidian Circle: бот описал организацию, но использовал другие формулировки. Ключевые слова «criminal», «primal beasts», «organization» не были найдены в ответе, хотя бот дал содержательный ответ. Это указывает на **проблему с выбором ключевых слов**, а не с качеством ответа.
+
+**A3 (FAIL)** — Duskborne Purge: несмотря на то, что файл `The_Duskborne_Purge.txt` присутствует в KB (absent-запросы тестируют сущности, которые были удалены в coverage-анализе, но сейчас восстановлены), бот дал полный ответ. Это подтверждает, что **перекрёстные ссылки** в файлах `Soren_Duskborne.txt`, `Draven_Duskborne.txt`, `Riven_Ashveil.txt` и `Theron_Duskborne.txt` содержат достаточно информации о событии.
+
+**A5 (FAIL)** — Three Legends: бот нашёл информацию о Valdric, Maelis и Vexaris из файлов `Verdania.txt`, `Valdric.txt`, `Vexaris.txt` и `Erevan.txt`. Coverage 80% — на границе порога. Это показывает **высокую связность** базы знаний.
 
 ### 3. Метрики оценки
 
@@ -141,7 +195,7 @@ Control-запросы показали неожиданное улучшени�
 
 ## Логирование запросов
 
-Каждый запрос к RAG-боту (через CLI, Telegram или тесты) автоматически сохраняется в JSONL-лог `Task4/logs/query_log.jsonl`.
+Каждый запрос к RAG-боту (через CLI, Telegram или тесты) автоматически сохраняется в JSONL-лог `Task7/logs.jsonl`.
 
 ### Формат записи
 
@@ -181,22 +235,22 @@ Control-запросы показали неожиданное улучшени�
 
 ### Реализация
 
-Логирование встроено в метод `_log_query()` класса `RAGEngine` в `Task4/rag_engine.py`. Лог-файл создаётся автоматически при первом запросе в `Task4/logs/query_log.jsonl`. Записи добавляются в режиме append — лог не перезаписывается.
+Логирование встроено в метод `_log_query()` класса `RAGEngine` в `Task4/rag_engine.py`. Лог-файл создаётся автоматически при первом запросе в `Task7/logs.jsonl`. Записи добавляются в режиме append — лог не перезаписывается.
 
 ## Структура файлов
 
-    Task4/
-    └── logs/
-        └── query_log.jsonl     # JSONL-лог всех запросов к боту
-
     Task7/
-    ├── analyze_coverage.py     # Скрипт анализа покрытия
-    ├── coverage_report.json    # JSON-отчёт с детальными результатами
-    ├── backup/                 # Резервные копии удалённых файлов
+    ├── analyze_coverage.py         # Скрипт анализа покрытия (8 фаз)
+    ├── coverage_report.json        # JSON-отчёт анализа покрытия
+    ├── golden_questions.json       # Золотой набор: 13 запросов (8 known + 5 absent)
+    ├── evaluate.py                 # Скрипт запуска golden set
+    ├── golden_set_results.json     # Результаты прогона golden set
+    ├── logs.jsonl                  # JSONL-лог всех запросов к боту
+    ├── backup/                     # Резервные копии удалённых файлов
     │   ├── Rift_of_Echoes.txt
     │   ├── Valdric.txt
     │   └── The_Duskborne_Purge.txt
-    └── README.md               # Этот файл
+    └── README.md                   # Этот файл
 
 ## Запуск
 
@@ -207,11 +261,24 @@ Control-запросы показали неожиданное улучшени�
     ollama serve &
     ollama pull llama3
 
+    # --- Анализ покрытия (coverage analysis) ---
+
     # Предварительный просмотр плана
-    python Task7/analyze_coverage.py --dry-run
+    make analyze-coverage-dry
 
     # Полный анализ (~37 минут)
-    python Task7/analyze_coverage.py
+    make analyze-coverage
 
     # Просмотр последнего отчёта
-    python Task7/analyze_coverage.py --report
+    make analyze-coverage-report
+
+    # --- Золотой набор (golden set) ---
+
+    # Все 13 запросов (~8 минут)
+    make golden-set
+
+    # Только known-запросы (8 шт.)
+    make golden-set-known
+
+    # Только absent-запросы (5 шт.)
+    make golden-set-absent
