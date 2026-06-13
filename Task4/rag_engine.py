@@ -17,6 +17,8 @@ import json
 import logging
 import os
 import sys
+import time
+from datetime import datetime, timezone
 
 import faiss
 import numpy as np
@@ -31,6 +33,10 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 FAISS_INDEX_DIR = os.path.join(SCRIPT_DIR, "..", "Task3", "faiss_index")
 INDEX_FILE = os.path.join(FAISS_INDEX_DIR, "index.faiss")
 METADATA_FILE = os.path.join(FAISS_INDEX_DIR, "metadata.json")
+
+# Лог запросов (JSONL)
+QUERY_LOG_DIR = os.path.join(SCRIPT_DIR, "logs")
+QUERY_LOG_FILE = os.path.join(QUERY_LOG_DIR, "query_log.jsonl")
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3")
@@ -299,14 +305,17 @@ class RAGEngine:
             sources  — множество имён источников
             chunks   — список найденных чанков
         """
+        start_time = time.time()
         chunks = self.search(query, top_k=TOP_K)
 
         if not chunks:
-            return {
+            result = {
                 "answer": "🤷 Не удалось найти релевантные фрагменты в базе знаний.",
                 "sources": set(),
                 "chunks": [],
             }
+            self._log_query(query, result, time.time() - start_time)
+            return result
 
         answer = self.generate_answer(query, chunks)
 
@@ -316,8 +325,63 @@ class RAGEngine:
             if src:
                 sources.add(src.replace(".txt", "").replace("_", " "))
 
-        return {
+        result = {
             "answer": answer,
             "sources": sources,
             "chunks": chunks,
         }
+        self._log_query(query, result, time.time() - start_time)
+        return result
+
+    def _log_query(self, query: str, result: dict, elapsed: float) -> None:
+        """
+        Записывает запрос в JSONL-лог (Task7/logs/query_log.jsonl).
+
+        Поля записи:
+            timestamp       — ISO 8601 UTC
+            query           — текст запроса
+            chunks_found    — количество найденных чанков
+            has_chunks      — были ли найдены чанки (bool)
+            answer_length   — длина ответа в символах
+            is_success      — флаг успешного ответа
+            sources         — список найденных источников
+            elapsed_sec     — время обработки в секундах
+        """
+        answer = result.get("answer", "")
+        sources = result.get("sources", set())
+        chunks = result.get("chunks", [])
+
+        # Определяем успешность ответа
+        refusal_markers = [
+            "не нашёл", "не найден", "не знаю", "нет информации",
+            "no information", "cannot answer", "don't have",
+            "not found", "no relevant", "недостаточно информации",
+            "не удалось найти", "не могу ответить",
+        ]
+        answer_lower = answer.lower()
+        is_refusal = any(m in answer_lower for m in refusal_markers)
+        is_error = answer.startswith("❌")
+        is_success = (
+            len(chunks) > 0
+            and len(answer) > 50
+            and not is_refusal
+            and not is_error
+        )
+
+        record = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "query": query,
+            "chunks_found": len(chunks),
+            "has_chunks": len(chunks) > 0,
+            "answer_length": len(answer),
+            "is_success": is_success,
+            "sources": sorted(sources),
+            "elapsed_sec": round(elapsed, 2),
+        }
+
+        try:
+            os.makedirs(QUERY_LOG_DIR, exist_ok=True)
+            with open(QUERY_LOG_FILE, "a", encoding="utf-8") as f:
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+        except Exception as e:
+            logger.warning("Failed to write query log: %s", e)

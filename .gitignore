@@ -2,3 +2,6 @@
 .vscode
 Task6/logs/*.log
 Task6/manifest.json
+__pycache__
+coverage_report.json
+logs
