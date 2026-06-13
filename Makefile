@@ -33,3 +33,12 @@ test-clean:
 
 test-rag:
 	$(PYTHON) Task5/test_rag.py
+
+update-index:
+	$(PYTHON) Task6/update_index.py
+
+update-index-full:
+	$(PYTHON) Task6/update_index.py --full
+
+update-index-dry:
+	$(PYTHON) Task6/update_index.py --dry-run
