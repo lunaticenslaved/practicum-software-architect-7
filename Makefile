@@ -43,20 +43,5 @@ update-index-full:
 update-index-dry:
 	$(PYTHON) Task6/update_index.py --dry-run
 
-analyze-coverage:
-	$(PYTHON) Task7/analyze_coverage.py
-
-analyze-coverage-dry:
-	$(PYTHON) Task7/analyze_coverage.py --dry-run
-
-analyze-coverage-report:
-	$(PYTHON) Task7/analyze_coverage.py --report
-
 golden-set:
 	$(PYTHON) Task7/evaluate.py
-
-golden-set-known:
-	$(PYTHON) Task7/evaluate.py --known
-
-golden-set-absent:
-	$(PYTHON) Task7/evaluate.py --absent
