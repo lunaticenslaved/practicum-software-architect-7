@@ -33,7 +33,8 @@ make update-index
 | Файл / Папка | Описание |
 |--------------|----------|
 | `update_index.py` | Скрипт инкрементального обновления индекса |
-| `crontab` | Готовая cron-задача для периодического запуска |
+| `architecture.puml` | PlantUML-диаграмма архитектуры и потока данных |
+| `cron.txt` | Готовая cron-задача для периодического запуска |
 | `docs/` | Папка-источник (симулирует внешний источник данных) |
 | `docs/Shadowfen.txt` | Пример документа — деревня Shadowfen |
 | `docs/Crystal_Peaks.txt` | Пример документа — горный хребет Crystal Peaks |
@@ -87,17 +88,12 @@ make update-index-dry
 
 ### Как запускать задачу
 
-Файл `Task6/crontab` содержит готовую cron-задачу:
-
-```cron
-# Обновление базы знаний каждый день в 06:00
-0 6 * * * cd /home/tek-gal/study/practicum-software-architect-7 && .venv/bin/python Task6/update_index.py >> Task6/logs/update.log 2>&1
-```
+Файл `Task6/cron.txt` содержит готовую cron-задачу.
 
 ### Установка
 
 ```bash
-crontab Task6/crontab
+crontab Task6/cron.txt
 ```
 
 ### Как часто работает

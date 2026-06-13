@@ -1,0 +1,27 @@
+@startuml
+title Task 6 — Автообновление базы знаний
+
+actor cron as "cron\n(0 6 * * *)"
+
+folder "Task6/docs/" as docs
+file "update_index.py" as script
+database "knowledge_base/" as kb
+
+file "chunks.jsonl" as chunks
+file "embeddings.jsonl" as emb
+database "index.faiss" as idx
+
+folder "Task6/logs/" as logs {
+  file "update.log"
+  file "last_update_summary.json"
+}
+
+cron --> script : запуск
+docs --> script : исходные\nдокументы
+script --> kb : синхронизация\nфайлов
+script --> chunks : нарезка\nна чанки
+chunks --> emb : multilingual-e5-large
+emb --> idx : FAISS IndexFlatIP
+script --> logs : логирование
+
+@enduml

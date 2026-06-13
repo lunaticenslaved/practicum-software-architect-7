@@ -1,2 +1,4 @@
 .venv
+.vscode
 Task6/logs/*.log
+Task6/manifest.json
