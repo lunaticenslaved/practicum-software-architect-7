@@ -15,8 +15,6 @@
 
 Использование:
     python Task6/update_index.py              # инкрементальное обновление
-    python Task6/update_index.py --full       # полная пересборка индекса
-    python Task6/update_index.py --dry-run    # показать изменения без обновления
 
 Переменные окружения:
     DOCS_PATH — путь к папке-источнику (по умолчанию: Task6/docs)
@@ -486,50 +484,6 @@ def incremental_update(
     logger.info("Итого в индексе: %d чанков", len(all_records))
 
 
-def full_rebuild(logger: logging.Logger) -> None:
-    """Полная пересборка: синхронизация + чанкинг + эмбеддинги + индекс для всех файлов KB."""
-    # Сначала синхронизируем docs/ → KB
-    docs_manifest = scan_docs(logger)
-    old_manifest = load_manifest()
-
-    added, modified, deleted = detect_changes(old_manifest, docs_manifest, logger)
-
-    # Синхронизируем все файлы из docs/ в KB
-    if added or modified or deleted:
-        logger.info("Синхронизация docs/ → knowledge_base/...")
-        sync_to_kb(added, modified, deleted, logger)
-
-    # Теперь пересобираем из всех файлов KB
-    kb_files = sorted(f for f in os.listdir(KB_PATH) if f.endswith(".txt"))
-    logger.info("Полная пересборка: %d файлов в KB", len(kb_files))
-
-    # Чанкинг
-    all_chunks = chunk_files(kb_files, logger)
-
-    # Эмбеддинги
-    all_embeddings = generate_embeddings(all_chunks, logger)
-
-    # Формируем записи
-    records = []
-    for i, chunk in enumerate(all_chunks):
-        record = {
-            "id": i,
-            "embedding": all_embeddings[i].tolist(),
-            "metadata": chunk["metadata"],
-            "text": chunk["text"],
-        }
-        records.append(record)
-
-    # Сохраняем
-    save_intermediate_files(records, logger)
-    rebuild_index(records, logger)
-
-    # Обновляем манифест (хеши docs/)
-    save_manifest(docs_manifest)
-    logger.info("Манифест обновлён (%d файлов из docs/)", len(docs_manifest))
-    logger.info("Полная пересборка завершена: %d чанков в индексе", len(records))
-
-
 # ============================================================
 # Структурированное резюме
 # ============================================================
@@ -601,10 +555,6 @@ def main() -> int:
     logger.info("Источник (docs/): %s", DOCS_PATH)
     logger.info("База знаний (KB): %s", KB_PATH)
 
-    # Разбор аргументов
-    dry_run = "--dry-run" in sys.argv
-    full = "--full" in sys.argv
-
     # Счётчики для резюме
     stats = {
         "new_chunks": 0,
@@ -616,62 +566,42 @@ def main() -> int:
     }
 
     try:
-        if full:
-            logger.info("Режим: полная пересборка (--full)")
-            full_rebuild(logger)
-            # Подсчитываем итоговый размер индекса
+        old_manifest = load_manifest()
+        current_docs = scan_docs(logger)
+
+        if not old_manifest:
+            # Манифест не найден — все файлы docs/ считаются новыми
+            logger.info(
+                "Манифест не найден — все %d файлов docs/ считаются новыми",
+                len(current_docs),
+            )
+            added = sorted(current_docs.keys())
+            modified = []
+            deleted = []
+        else:
+            added, modified, deleted = detect_changes(
+                old_manifest, current_docs, logger
+            )
+
+        stats["files_added"] = len(added)
+        stats["files_modified"] = len(modified)
+        stats["files_deleted"] = len(deleted)
+
+        if not added and not modified and not deleted:
+            logger.info("Изменений в docs/ не обнаружено — индекс актуален")
             if os.path.isfile(EMBEDDINGS_FILE):
                 with open(EMBEDDINGS_FILE, "r", encoding="utf-8") as f:
                     stats["total_index_size"] = sum(1 for _ in f)
         else:
-            # Инкрементальное обновление
-            old_manifest = load_manifest()
-            current_docs = scan_docs(logger)
-
-            if not old_manifest:
-                logger.info("Манифест не найден — выполняется полная пересборка")
-                if dry_run:
-                    logger.info(
-                        "[DRY-RUN] Будет выполнена полная пересборка "
-                        "(%d файлов в docs/, + все файлы KB)",
-                        len(current_docs),
-                    )
-                else:
-                    full_rebuild(logger)
-                    if os.path.isfile(EMBEDDINGS_FILE):
-                        with open(EMBEDDINGS_FILE, "r", encoding="utf-8") as f:
-                            stats["total_index_size"] = sum(1 for _ in f)
-            else:
-                added, modified, deleted = detect_changes(
-                    old_manifest, current_docs, logger
-                )
-                stats["files_added"] = len(added)
-                stats["files_modified"] = len(modified)
-                stats["files_deleted"] = len(deleted)
-
-                if not added and not modified and not deleted:
-                    logger.info("Изменений в docs/ не обнаружено — индекс актуален")
-                    if os.path.isfile(EMBEDDINGS_FILE):
-                        with open(EMBEDDINGS_FILE, "r", encoding="utf-8") as f:
-                            stats["total_index_size"] = sum(1 for _ in f)
-                elif dry_run:
-                    logger.info("[DRY-RUN] Обновление не выполнено (только просмотр)")
-                    if added:
-                        logger.info("  Будут добавлены в KB: %s", ", ".join(added))
-                    if modified:
-                        logger.info("  Будут обновлены в KB: %s", ", ".join(modified))
-                    if deleted:
-                        logger.info("  Будут удалены из KB: %s", ", ".join(deleted))
-                else:
-                    incremental_update(added, modified, deleted, logger)
-                    save_manifest(current_docs)
-                    logger.info(
-                        "Манифест обновлён (%d файлов из docs/)", len(current_docs)
-                    )
-                    # Подсчитываем итоговый размер индекса
-                    if os.path.isfile(EMBEDDINGS_FILE):
-                        with open(EMBEDDINGS_FILE, "r", encoding="utf-8") as f:
-                            stats["total_index_size"] = sum(1 for _ in f)
+            incremental_update(added, modified, deleted, logger)
+            save_manifest(current_docs)
+            logger.info(
+                "Манифест обновлён (%d файлов из docs/)", len(current_docs)
+            )
+            # Подсчитываем итоговый размер индекса
+            if os.path.isfile(EMBEDDINGS_FILE):
+                with open(EMBEDDINGS_FILE, "r", encoding="utf-8") as f:
+                    stats["total_index_size"] = sum(1 for _ in f)
 
         write_summary(logger, start_time, status="OK", **stats)
         return 0

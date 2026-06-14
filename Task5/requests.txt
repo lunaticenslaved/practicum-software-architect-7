@@ -1,5 +1,4 @@
-cd /home/tek-gal/study/practicum-software-architect-7 && make test-rag
-.venv/bin/python Task5/test_rag.py
+make test-rag
 
 ======================================================================
   Загрузка RAG-движка
