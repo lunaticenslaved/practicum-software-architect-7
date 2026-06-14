@@ -1,0 +1,9 @@
+.venv
+.vscode
+Task6/logs
+!Task6/logs/.gitkeep
+Task6/manifest.json
+__pycache__
+coverage_report.json
+logs
+backup

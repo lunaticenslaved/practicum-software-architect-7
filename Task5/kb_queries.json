@@ -1,0 +1,30 @@
+{
+  "description": "Группа A — запросы с полезным ответом из базы знаний (5 шт.)",
+  "queries": [
+    {
+      "name": "1. Успешный запрос — персонаж (Toren Solwind)",
+      "query": "Who is Toren Solwind?",
+      "description": "Вопрос о главном персонаже. Ожидается ответ с фактами: sentinel Verdania, beast-bearer of the Crimson Beast, Solwind clan."
+    },
+    {
+      "name": "2. Успешный запрос — локация (Verdania)",
+      "query": "Где расположена Вердания и кто ей управляет?",
+      "description": "Вопрос на русском о локации. Ожидается: hidden village of the Realm of Embers, Archon как лидер."
+    },
+    {
+      "name": "3. Успешный запрос — организация (The Obsidian Circle)",
+      "query": "What is The Obsidian Circle and what are their goals?",
+      "description": "Вопрос об организации. Ожидается: группа sentinel вне системы скрытых деревень, захват primal beasts, Eye of the Moon Plan."
+    },
+    {
+      "name": "4. Успешный запрос — персонаж (Kaelen Duskborne)",
+      "query": "Расскажи о Каэлене Даскборне и его клане",
+      "description": "Вопрос на русском о персонаже. Ожидается: последний выживший из клана Duskborne, брат Soren, Eclipse Eye."
+    },
+    {
+      "name": "5. Успешный запрос — событие (The Great Convergence War)",
+      "query": "What was The Great Convergence War and who fought in it?",
+      "description": "Вопрос о ключевом событии. Ожидается: война Allied Sentinel Forces vs The Obsidian Circle, Zephros как командующий."
+    }
+  ]
+}

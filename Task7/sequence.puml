@@ -1,0 +1,32 @@
+@startuml sequence
+title Обработка запроса и оценка качества
+
+actor User
+participant "RAGEngine" as RAG
+database "FAISS" as FAISS
+participant "Ollama LLM" as LLM
+database "logs.jsonl" as Log
+
+User -> RAG: ask(query)
+RAG -> RAG: get_query_embedding(query)
+RAG -> FAISS: search(vector, top_k=5)
+
+alt Чанки не найдены
+  FAISS --> RAG: []
+  RAG --> User: "Информация не найдена"
+else Чанки найдены
+  FAISS --> RAG: chunks + scores
+  RAG -> RAG: build_rag_prompt(query, chunks)
+  RAG -> LLM: POST /api/chat
+  alt Ollama недоступна
+    LLM --> RAG: ошибка
+    RAG --> User: "❌ Ошибка подключения"
+  else OK
+    LLM --> RAG: answer
+    RAG --> User: ответ
+  end
+end
+
+RAG -> Log: _log_query(query, result)
+
+@enduml

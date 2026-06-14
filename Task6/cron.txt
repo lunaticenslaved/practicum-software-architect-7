@@ -1,0 +1,2 @@
+# Обновление базы знаний каждый день в 06:00
+0 6 * * * .venv/bin/python Task6/update_index.py >> Task6/logs/update.log 2>&1

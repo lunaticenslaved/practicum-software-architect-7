@@ -1,0 +1,9 @@
+.venv
+__pycache__
+*.pyc
+.git
+Task2/raw
+Task6/logs
+Task7/logs.jsonl
+Task7/golden_questions_results.json
+Task7/backup
