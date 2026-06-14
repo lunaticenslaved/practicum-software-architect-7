@@ -16,6 +16,8 @@ RAG Telegram-бот с техниками промптинга (Few-shot + Chain
     TOP_K              — количество чанков для контекста (по умолчанию: 5)
 """
 
+import asyncio
+import functools
 import logging
 import os
 import sys
@@ -45,6 +47,32 @@ logger = logging.getLogger(__name__)
 
 # Глобальный экземпляр RAG-движка
 rag = RAGEngine()
+
+
+# ============================================================
+# Утилиты
+# ============================================================
+async def send_typing_safe(chat) -> None:
+    """Отправляет typing action, игнорируя ошибки сети."""
+    try:
+        await chat.send_action("typing")
+    except Exception:
+        pass
+
+
+async def reply_with_retry(message, text: str, retries: int = 3) -> None:
+    """Отправляет ответ с повторными попытками при таймауте."""
+    for attempt in range(retries):
+        try:
+            await message.reply_text(text)
+            return
+        except Exception as e:
+            if attempt < retries - 1:
+                logger.warning(f"Reply attempt {attempt + 1} failed: {e}, retrying...")
+                await asyncio.sleep(2)
+            else:
+                logger.error(f"Reply failed after {retries} attempts: {e}")
+                raise
 
 
 # ============================================================
@@ -88,14 +116,35 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     logger.info(f"Query from {update.effective_user.id}: {query}")
 
     # Отправляем индикатор "печатает..."
-    await update.message.chat.send_action("typing")
+    await send_typing_safe(update.message.chat)
 
-    # RAG-пайплайн
+    # RAG-пайплайн: запускаем в executor, чтобы не блокировать event loop,
+    # и параллельно отправляем typing action каждые 4 секунды
+    loop = asyncio.get_event_loop()
+    result = None
+
     try:
-        result = rag.ask(query)
+        rag_future = loop.run_in_executor(
+            None, functools.partial(rag.ask, query)
+        )
+
+        # Периодически отправляем typing, пока Ollama думает
+        while not rag_future.done():
+            try:
+                result = await asyncio.wait_for(
+                    asyncio.shield(rag_future), timeout=4.0
+                )
+                break
+            except asyncio.TimeoutError:
+                # Ollama ещё думает — отправляем typing action
+                await send_typing_safe(update.message.chat)
+
+        if result is None:
+            result = rag_future.result()
+
     except Exception as e:
         logger.error(f"RAG error: {e}")
-        await update.message.reply_text(f"❌ Ошибка: {e}")
+        await reply_with_retry(update.message, f"❌ Ошибка: {e}")
         return
 
     answer = result["answer"]
@@ -108,7 +157,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if len(response_text) > 4096:
         response_text = response_text[:4090] + "..."
 
-    await update.message.reply_text(response_text)
+    await reply_with_retry(update.message, response_text)
 
 
 # ============================================================
@@ -125,9 +174,17 @@ def main() -> None:
     rag.load()
     print("✅ RAG-движок загружен!\n")
 
-    # Создаём Telegram-бота
+    # Создаём Telegram-бота с увеличенными таймаутами
     print(f"🤖 Запуск Telegram-бота (модель: {OLLAMA_MODEL})...")
-    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+    app = (
+        ApplicationBuilder()
+        .token(TELEGRAM_BOT_TOKEN)
+        .connect_timeout(30.0)
+        .read_timeout(30.0)
+        .write_timeout(30.0)
+        .pool_timeout(30.0)
+        .build()
+    )
 
     app.add_handler(CommandHandler("start", start_handler))
     app.add_handler(CommandHandler("help", help_handler))

@@ -2,7 +2,6 @@ PYTHON = .venv/bin/python
 
 install:
 	python -m virtualenv .venv
-	curl -sS https://bootstrap.pypa.io/pip/3.8/get-pip.py | .venv/bin/python
 	.venv/bin/pip install -r requirements.txt
 
 prepare:
